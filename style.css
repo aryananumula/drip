@@ -1,0 +1,21 @@
+body {
+    margin: 0;
+    overflow: hidden;
+    display: flex;
+}
+
+input[type="text"] {
+    padding: 0;
+    height: 30px;
+    position: relative;
+    left: 0;
+    outline: none;
+    border: 1px solid #cdcdcd;
+    border-color: rgba(0, 0, 0, 0.15);
+    background-color: white;
+    font-size: 16px;
+    border-radius: 5px;
+    padding-left: 10px;
+    padding-right: 10px;
+    min-width: 200px;
+}
