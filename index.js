@@ -58,14 +58,16 @@ function setup() {
   start();
   onGround = false;
   frameRate(120);
+  view = 2;
   level = [
     ["rect", [60, 555, 100, 50]],
     ["rect", [0, 600, 300, 75]],
-    ["rect", [400, 550, 500, 100]],
+    ["rect", [400, 550, 2000, 100]],
   ];
 }
 
 function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
   if (gevent === "start") {
     start();
   }
@@ -91,23 +93,27 @@ function draw() {
       x = 0;
       y = 0;
     }
-    scrollX = windowWidth / 2 - x - size / 2 + vx;
-    scrollY = windowHeight / 2 - y - size / 2;
+    scrollX = windowWidth / 2 - x / view - size / 2 / view + vx / view;
+    scrollY = windowHeight / 2 - y / view - size / 2 / view;
     for (let i = 0; i < players.length; i++) {
       fill(193, 225, 193);
       player = players[i];
-      square(player["pos"]["x"] + scrollX, player["pos"]["y"] + scrollY, size);
+      square(
+        player["pos"]["x"] / view + scrollX,
+        player["pos"]["y"] / view + scrollY,
+        size / view,
+      );
       textAlign(CENTER);
       fill(192, 192, 192);
       text(
         player["name"],
-        player["pos"]["x"] + size / 2 + scrollX,
-        player["pos"]["y"] - size / 2 + scrollY,
+        (player["pos"]["x"] + size / 2) / view + scrollX,
+        (player["pos"]["y"] - size / 2) / view + scrollY,
       );
     }
     fill(167, 199, 231);
     noStroke();
-    square(x + scrollX, y + scrollY, size);
+    square(x / view + scrollX, y / view + scrollY, size / view);
     fsRIGHT = true;
     fsLEFT = true;
     fsUP = true;
@@ -115,13 +121,13 @@ function draw() {
       if (level[i][0] === "rect") {
         fill(229, 228, 226);
         rect(
-          level[i][1][0] + scrollX,
-          level[i][1][1] + scrollY,
-          level[i][1][2],
-          level[i][1][3],
+          level[i][1][0] / view + scrollX,
+          level[i][1][1] / view + scrollY,
+          level[i][1][2] / view,
+          level[i][1][3] / view,
         );
         if (
-          level[i][1][1] + level[i][1][3] > y &&
+          (level[i][1][1] + level[i][1][3]) / view > y / view &&
           y + size > level[i][1][1] &&
           level[i][1][0] - x < 5 + size &&
           level[i][1][0] - x > 5
