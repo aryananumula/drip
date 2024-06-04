@@ -1,7 +1,7 @@
 ws = new WebSocket("wss://araeyn-dripserver.hf.space");
 let font;
 function start() {
-  clear();
+  rain();
   //textFont(junction);
   textSize(128);
   textAlign(CENTER, CENTER);
@@ -12,9 +12,32 @@ function start() {
   div.position(0, 0);
   tokenbox.position(windowWidth / 2 - 110, windowHeight / 2 - 50);
   namebox.position(windowWidth / 2 - 110, windowHeight / 2 + 60);
+  fill(0);
   text("token", windowWidth / 2, windowHeight / 2 - 60);
   text("name", windowWidth / 2, windowHeight / 2 + 50);
 }
+
+function rain() {
+  count = (Math.floor(Math.random() * (windowWidth + 1000)) + 1000) * view;
+  let rainx = [];
+  let angle = PI / 32;
+  rotate(angle);
+  for (let i = 0; i < count; i++) {
+    rainx.push(Math.floor(Math.random() * (windowWidth + 1000)));
+    for (let k = 0; k < 1 * view; k++) {
+      noStroke();
+      fill(111, 143, 175);
+      rect(
+        rainx[i],
+        Math.floor(Math.random() * (windowHeight + 5000) - 5000),
+        1 / view,
+        80 / view,
+      );
+    }
+  }
+  rotate(-angle);
+}
+
 function preload() {
   //sniglet = loadFont(
   //  "https://raw.githubusercontent.com/theleagueof/sniglet/master/Sniglet%20Regular.otf",
@@ -43,6 +66,7 @@ function setup() {
   x = NaN;
   y = NaN;
   vx = 0;
+  view = 1;
   vy = 0;
   size = 20;
   players = [];
@@ -57,23 +81,30 @@ function setup() {
   namebox.parent(div);
   start();
   onGround = false;
-  frameRate(120);
-  view = 2;
+  frameRate(60);
   level = [
-    ["rect", [60, 555, 100, 50]],
+    //["rect", [60, 555, 100, 50]],
     ["rect", [0, 600, 300, 75]],
-    ["rect", [400, 550, 2000, 100]],
+    ["rect", [400, 550, 400, 100]],
   ];
 }
 
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
   if (gevent === "start") {
+    clear();
     start();
   }
 }
 function draw() {
+  clear();
+  background(229, 228, 226);
+  textSize(12);
+  textAlign(RIGHT, TOP);
+  fill(0);
+  text("fps: " + Math.round(1000 / deltaTime), windowWidth - 10, 10);
   if (gevent === "start") {
+    start();
     if (keyIsDown(ENTER)) {
       gevent = "game";
       div.remove();
@@ -82,7 +113,7 @@ function draw() {
       ws.send(JSON.stringify({ type: "login", token: token }));
     }
   } else if (gevent === "game") {
-    clear();
+    rain();
     if (isNaN(x) && isNaN(y)) {
       return;
     }
@@ -119,7 +150,7 @@ function draw() {
     fsUP = true;
     for (let i = 0; i < level.length; i++) {
       if (level[i][0] === "rect") {
-        fill(229, 228, 226);
+        fill(129, 133, 137);
         rect(
           level[i][1][0] / view + scrollX,
           level[i][1][1] / view + scrollY,
@@ -186,7 +217,7 @@ function draw() {
       }
     }
     y += vy;
-    vy += 0.2;
+    vy += 0.15;
     vx *= 0.9;
     for (let i = 0; i < players.length; i++) {
       fill(193, 225, 193);
