@@ -1,7 +1,6 @@
 ws = new WebSocket("wss://araeyn-dripserver.hf.space");
 let font;
 function start() {
-  rain();
   //textFont(junction);
   textSize(128);
   textAlign(CENTER, CENTER);
@@ -12,9 +11,11 @@ function start() {
   div.position(0, 0);
   tokenbox.position(windowWidth / 2 - 110, windowHeight / 2 - 50);
   namebox.position(windowWidth / 2 - 110, windowHeight / 2 + 60);
+  colorbox.position(windowWidth / 2 - 110, windowHeight / 2 + 170);
   fill(0);
   text("token", windowWidth / 2, windowHeight / 2 - 60);
   text("name", windowWidth / 2, windowHeight / 2 + 50);
+  text("color ( hex )", windowWidth / 2, windowHeight / 2 + 160);
 }
 
 function rain() {
@@ -26,7 +27,14 @@ function rain() {
     rainx.push(Math.floor(Math.random() * (windowWidth + 1000)));
     for (let k = 0; k < 1 * view; k++) {
       noStroke();
-      fill(111, 143, 175);
+      colors = [];
+      colors.push([74, 101, 131]);
+      colors.push([108, 128, 148]);
+      colors.push([78, 104, 129]);
+      colors.push([105, 122, 140]);
+      colors.push([60, 83, 105]);
+      color = colors[Math.floor(Math.random() * colors.length)];
+      fill(color[0], color[1], color[2]);
       rect(
         rainx[i],
         Math.floor(Math.random() * (windowHeight + 5000) - 5000),
@@ -37,7 +45,10 @@ function rain() {
   }
   rotate(-angle);
 }
-
+function reconnect() {
+  reconnectButton.hide();
+  ws.send(JSON.stringify({ type: "login", token: token }));
+}
 function preload() {
   //sniglet = loadFont(
   //  "https://raw.githubusercontent.com/theleagueof/sniglet/master/Sniglet%20Regular.otf",
@@ -55,9 +66,14 @@ ws.addEventListener("message", (event) => {
   if (data["type"] == "init") {
     x = data["data"]["pos"]["x"];
     y = data["data"]["pos"]["y"];
+    gevent = "game";
+    alreadyReconnected = false;
   }
   if (data["type"] == "update") {
     players = data["data"]["players"];
+  }
+  if (data["type"] == "reconnect") {
+    gevent = "reconnect";
   }
 });
 
@@ -68,6 +84,7 @@ function setup() {
   vx = 0;
   view = 1;
   vy = 0;
+  alreadyReconnected = false;
   size = 20;
   players = [];
   gevent = "start";
@@ -79,9 +96,14 @@ function setup() {
   tokenbox.parent(div);
   namebox = createInput("", "text");
   namebox.parent(div);
+  colorbox = createInput("", "text");
+  colorbox.parent(div);
+  reconnectButton = createButton("reconnect");
+  reconnectButton.hide();
   start();
   onGround = false;
   frameRate(60);
+  rn = 0;
   level = [
     //["rect", [60, 555, 100, 50]],
     ["rect", [0, 600, 300, 75]],
@@ -95,10 +117,14 @@ function windowResized() {
     clear();
     start();
   }
+  if (gevent === "reconnect") {
+    reconnectButton.center();
+  }
 }
 function draw() {
   clear();
-  background(229, 228, 226);
+  background(201, 232, 253);
+  //rain();
   textSize(12);
   textAlign(RIGHT, TOP);
   fill(0);
@@ -110,10 +136,16 @@ function draw() {
       div.remove();
       token = tokenbox.value();
       pname = namebox.value();
+      color = colorbox.value();
+      if (color.length === 0) {
+        color = "#A7C7E7";
+      } else if (/^#([0-9a-f]{3}){1,2}$/i.test(color.substring(1)) === true) {
+        color = "#A7C7E7";
+      }
+      console.log(color);
       ws.send(JSON.stringify({ type: "login", token: token }));
     }
   } else if (gevent === "game") {
-    rain();
     if (isNaN(x) && isNaN(y)) {
       return;
     }
@@ -127,7 +159,7 @@ function draw() {
     scrollX = windowWidth / 2 - x / view - size / 2 / view + vx / view;
     scrollY = windowHeight / 2 - y / view - size / 2 / view;
     for (let i = 0; i < players.length; i++) {
-      fill(193, 225, 193);
+      fill(players[i]["color"]);
       player = players[i];
       square(
         player["pos"]["x"] / view + scrollX,
@@ -142,7 +174,7 @@ function draw() {
         (player["pos"]["y"] - size / 2) / view + scrollY,
       );
     }
-    fill(167, 199, 231);
+    fill(color);
     noStroke();
     square(x / view + scrollX, y / view + scrollY, size / view);
     fsRIGHT = true;
@@ -150,7 +182,9 @@ function draw() {
     fsUP = true;
     for (let i = 0; i < level.length; i++) {
       if (level[i][0] === "rect") {
-        fill(129, 133, 137);
+        //fill(129, 133, 137);
+        fill(229, 228, 226);
+        fill("#CCCCFF");
         rect(
           level[i][1][0] / view + scrollX,
           level[i][1][1] / view + scrollY,
@@ -226,9 +260,21 @@ function draw() {
     ws.send(
       JSON.stringify({
         type: "update",
-        data: { pos: { x: x, y: y, vy: vy }, name: pname, time: Date.now() },
+        data: {
+          pos: { x: x, y: y, vy: vy },
+          name: pname,
+          time: Date.now(),
+          color: color,
+        },
         token: token,
       }),
     );
+  } else if (gevent === "reconnect") {
+    if (alreadyReconnected === false) {
+      reconnectButton.show();
+      alreadyReconnected = true;
+    }
+    reconnectButton.center();
+    reconnectButton.mousePressed(reconnect);
   }
 }
