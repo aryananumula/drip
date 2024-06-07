@@ -1,12 +1,12 @@
 ws = new WebSocket("wss://araeyn-dripserver.hf.space");
 let font;
+
 function start() {
-  //textFont(junction);
+  textFont(junction);
   textSize(128);
   textAlign(CENTER, CENTER);
   text("", windowWidth / 2, windowHeight / 4);
   textAlign(CENTER, CENTER);
-  //textFont(junction);
   textSize(16);
   div.position(0, 0);
   tokenbox.position(windowWidth / 2 - 110, windowHeight / 2 - 50);
@@ -45,20 +45,27 @@ function rain() {
   }
   rotate(-angle);
 }
+
 function reconnect() {
   reconnectButton.hide();
-  ws.send(JSON.stringify({ type: "login", token: token }));
+  ws.send(
+    JSON.stringify({
+      type: "login",
+      token: token,
+    }),
+  );
 }
+
 function preload() {
-  //sniglet = loadFont(
-  //  "https://raw.githubusercontent.com/theleagueof/sniglet/master/Sniglet%20Regular.otf",
-  //);
-  //ostrichSans = loadFont(
-  //  "https://raw.githubusercontent.com/theleagueof/ostrich-sans/master/OstrichSans-Black.otf",
-  //);
-  //junction = loadFont(
-  //  "https://raw.githubusercontent.com/theleagueof/junction/master/Junction-regular.otf",
-  //);
+  sniglet = loadFont(
+    "https://raw.githubusercontent.com/theleagueof/sniglet/master/Sniglet%20Regular.otf",
+  );
+  ostrichSans = loadFont(
+    "https://raw.githubusercontent.com/theleagueof/ostrich-sans/master/OstrichSans-Black.otf",
+  );
+  junction = loadFont(
+    "https://raw.githubusercontent.com/theleagueof/junction/master/Junction-regular.otf",
+  );
 }
 
 ws.addEventListener("message", (event) => {
@@ -105,9 +112,12 @@ function setup() {
   frameRate(60);
   rn = 0;
   level = [
-    //["rect", [60, 555, 100, 50]],
+    ["rect", [900, 500, 100, 50]],
     ["rect", [0, 600, 300, 75]],
     ["rect", [400, 550, 400, 100]],
+    ["rect", [1100, 450, 50, 50]],
+    ["rect", [1250, 400, 100, 50]],
+    ["rect", [1060, 300, 100, 50]],
   ];
 }
 
@@ -121,6 +131,7 @@ function windowResized() {
     reconnectButton.center();
   }
 }
+
 function draw() {
   clear();
   background(201, 232, 253);
@@ -143,13 +154,18 @@ function draw() {
         color = "#A7C7E7";
       }
       console.log(color);
-      ws.send(JSON.stringify({ type: "login", token: token }));
+      ws.send(
+        JSON.stringify({
+          type: "login",
+          token: token,
+        }),
+      );
     }
   } else if (gevent === "game") {
     if (isNaN(x) && isNaN(y)) {
       return;
     }
-    //textFont(junction);
+    textFont(junction);
     textSize(16);
     textAlign(CENTER, CENTER);
     if (y > 2000) {
@@ -223,35 +239,54 @@ function draw() {
       vy = -5;
       onGround = false;
     }
-    for (let i = 0; i < vy * 10; i++) {
+    for (let i = 0; i < Math.abs(vy) * 10; i++) {
       y += vy / Math.abs(vy) / 10;
-      for (let i = 0; i < level.length; i++) {
-        if (level[i][0] === "rect") {
-          if (
-            level[i][1][0] - size < x &&
-            x < level[i][1][0] + level[i][1][2] &&
-            y + size > level[i][1][1] &&
-            y < level[i][1][1] + level[i][1][3]
-          ) {
-            onGround = true;
-            while (
+      if (vy >= 0) {
+        for (let i = 0; i < level.length; i++) {
+          if (level[i][0] === "rect") {
+            if (
               level[i][1][0] - size < x &&
               x < level[i][1][0] + level[i][1][2] &&
               y + size > level[i][1][1] &&
               y < level[i][1][1] + level[i][1][3]
             ) {
-              y -= vy / Math.abs(vy) / 10;
+              onGround = true;
+              while (
+                y + size > level[i][1][1] &&
+                y < level[i][1][1] + level[i][1][3]
+              ) {
+                y -= vy / Math.abs(vy) / 10;
+              }
+              vy = 0;
+              break;
+            } else {
+              onGround = false;
             }
-            vy = 0;
-            break;
-          } else {
-            onGround = false;
+          }
+        }
+      } else {
+        for (let i = 0; i < level.length; i++) {
+          if (level[i][0] === "rect") {
+            if (
+              level[i][1][0] - size < x &&
+              x < level[i][1][0] + level[i][1][2] &&
+              y <= level[i][1][1] + level[i][1][3] &&
+              y > level[i][1][1]
+            ) {
+              while (
+                y <= level[i][1][1] + level[i][1][3] &&
+                y > level[i][1][1]
+              ) {
+                y -= vy / Math.abs(vy) / 10;
+              }
+              //vy = 0;
+              break;
+            }
           }
         }
       }
     }
-    y += vy;
-    vy += 0.15;
+    vy += 0.12;
     vx *= 0.9;
     for (let i = 0; i < players.length; i++) {
       fill(193, 225, 193);
@@ -261,7 +296,11 @@ function draw() {
       JSON.stringify({
         type: "update",
         data: {
-          pos: { x: x, y: y, vy: vy },
+          pos: {
+            x: x,
+            y: y,
+            vy: vy,
+          },
           name: pname,
           time: Date.now(),
           color: color,
@@ -277,4 +316,9 @@ function draw() {
     reconnectButton.center();
     reconnectButton.mousePressed(reconnect);
   }
+}
+
+function mouseClicked() {
+  console.log(view * (mouseX - scrollX));
+  console.log(view * (mouseY - scrollY));
 }
