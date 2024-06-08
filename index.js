@@ -19,7 +19,7 @@ function start() {
 }
 
 function rain() {
-  count = (Math.floor(Math.random() * (windowWidth + 1000)) + 1000) * view;
+  let count = (Math.floor(Math.random() * (windowWidth + 1000)) + 1000) * view;
   let rainx = [];
   let angle = PI / 32;
   rotate(angle);
@@ -94,6 +94,7 @@ function setup() {
   alreadyReconnected = false;
   size = 20;
   players = [];
+  bullets = [{ x: 0, y: 400, v: 1, angle: 0 }];
   gevent = "start";
   //div = createDiv(`<input type="text" placeholder="What's your name?">
   //  <div class="line"></div>`);
@@ -134,6 +135,7 @@ function windowResized() {
 
 function draw() {
   clear();
+  noStroke();
   background(201, 232, 253);
   //rain();
   textSize(12);
@@ -286,7 +288,7 @@ function draw() {
         }
       }
     }
-    vy += 0.12;
+    vy += 0.15;
     vx *= 0.9;
     for (let i = 0; i < players.length; i++) {
       fill(193, 225, 193);
@@ -297,9 +299,8 @@ function draw() {
         type: "update",
         data: {
           pos: {
-            x: x,
-            y: y,
-            vy: vy,
+            x: Math.round(x),
+            y: Math.round(y),
           },
           name: pname,
           time: Date.now(),
